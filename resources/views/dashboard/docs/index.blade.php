@@ -122,60 +122,60 @@
             </div>
         @endif
     @endif
-</div>
 
-{{-- Delete confirmation dialog --}}
-<template x-teleport="body">
-    <div
-        x-show="deleteDoc !== null"
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        @keydown.escape.window="deleteDoc = null"
-    >
-        <div class="fixed inset-0 bg-zinc-900/50 backdrop-blur-sm" @click="deleteDoc = null" aria-hidden="true"></div>
+    {{-- Delete confirmation dialog (must be inside x-data so Alpine scope is preserved when teleported to body) --}}
+    <template x-teleport="body">
         <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-dialog-title"
-            class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
             x-show="deleteDoc !== null"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
             x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @keydown.escape.window="deleteDoc = null"
         >
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
-            </div>
-            <h2 id="delete-dialog-title" class="mt-4 text-lg font-semibold text-zinc-900">Delete document</h2>
-            <p class="mt-2 text-sm text-zinc-500" x-text="deleteDoc ? 'Are you sure you want to delete &quot;' + deleteDoc.title + '&quot;? This action cannot be undone.' : ''"></p>
-            <div class="mt-6 flex justify-end gap-3">
-                <button
-                    type="button"
-                    @click="deleteDoc = null"
-                    class="inline-flex h-10 items-center rounded-xl border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                >
-                    Cancel
-                </button>
-                <template x-if="deleteDoc">
-                    <form :action="deleteDoc?.url" method="post" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button
-                            type="submit"
-                            class="inline-flex h-10 items-center rounded-xl bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-red-700"
-                        >
-                            Delete
-                        </button>
-                    </form>
-                </template>
+            <div class="fixed inset-0 bg-zinc-900/50 backdrop-blur-sm" @click="deleteDoc = null" aria-hidden="true"></div>
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-dialog-title"
+                class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+                x-show="deleteDoc !== null"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+            >
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                </div>
+                <h2 id="delete-dialog-title" class="mt-4 text-lg font-semibold text-zinc-900">Delete document</h2>
+                <p class="mt-2 text-sm text-zinc-500" x-text="deleteDoc ? 'Are you sure you want to delete &quot;' + deleteDoc.title + '&quot;? This action cannot be undone.' : ''"></p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button
+                        type="button"
+                        @click="deleteDoc = null"
+                        class="inline-flex h-10 items-center rounded-xl border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                    >
+                        Cancel
+                    </button>
+                    <template x-if="deleteDoc">
+                        <form :action="deleteDoc?.url" method="post" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button
+                                type="submit"
+                                class="inline-flex h-10 items-center rounded-xl bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </form>
+                    </template>
+                </div>
             </div>
         </div>
-    </div>
-</template>
+    </template>
+</div>
 @endsection

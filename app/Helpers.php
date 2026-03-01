@@ -7,7 +7,7 @@ if (! function_exists('sanitize_doc_html')) {
      */
     function sanitize_doc_html(string $html): string
     {
-        $allowed = '<p><br><div><span><strong><b><em><i><u><a><ul><ol><li><h1><h2><h3><h4><blockquote><pre><code><hr><figure><figcaption><img>';
+        $allowed = '<p><br><div><span><strong><b><em><i><u><a><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><pre><code><hr><figure><figcaption><img><del><sub><sup>';
         $html = strip_tags($html, $allowed);
         $html = preg_replace('/\s*href\s*=\s*["\']?\s*javascript:[^"\']*["\']?/i', ' href="#"', $html);
         $html = preg_replace('/\s*src\s*=\s*["\']?\s*javascript:[^"\']*["\']?/i', ' src=""', $html);
