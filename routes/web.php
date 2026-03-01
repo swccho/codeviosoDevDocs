@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\DocController as DashboardDocController;
 use App\Http\Controllers\Public\DocController as PublicDocController;
@@ -7,11 +8,20 @@ use App\Http\Controllers\Public\HomeController;
 use App\Models\Doc;
 use Illuminate\Support\Facades\Route;
 
-// Public routes
+// ——— Public routes (no auth)
 Route::get('/', HomeController::class)->name('home');
 Route::get('/docs/{slug}', [PublicDocController::class, 'show'])->name('docs.show');
 
-// Dashboard (auth)
+// ——— Auth routes (guest for login/register; auth for logout)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// ——— Dashboard routes (auth middleware; policy enforced in controller)
 Route::middleware('auth')->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/', DashboardController::class)->name('index');
     Route::get('/docs', [DashboardDocController::class, 'index'])->name('docs.index');
@@ -24,7 +34,7 @@ Route::middleware('auth')->prefix('dashboard')->name('dashboard.')->group(functi
     Route::post('/docs/{doc}/unpublish', [DashboardDocController::class, 'unpublish'])->name('docs.unpublish');
 });
 
-// Scoped binding: dashboard {doc} must belong to current user (404 otherwise)
+// Dashboard {doc} binding: only current user's docs (404 if not owner)
 Route::bind('doc', function (string $value) {
     $user = auth()->user();
     if (! $user) {
@@ -33,6 +43,3 @@ Route::bind('doc', function (string $value) {
     return Doc::where('id', $value)->where('user_id', $user->id)->firstOrFail();
 });
 
-// Laravel Breeze / default auth routes (login, register, etc.) are loaded by the auth package if present.
-// If using Laravel's default install without Breeze, add:
-// require __DIR__.'/auth.php';

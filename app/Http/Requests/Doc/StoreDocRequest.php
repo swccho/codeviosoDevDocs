@@ -26,7 +26,7 @@ class StoreDocRequest extends FormRequest
             'content' => ['required', 'string', 'min:30'],
             'excerpt' => ['nullable', 'string', 'max:300'],
             'status' => ['required', 'in:draft,published'],
-            'cover_image' => ['nullable', 'image', 'max:2048'],
+            'cover_image' => ['nullable', 'image', 'max:20480'],
         ];
     }
 }

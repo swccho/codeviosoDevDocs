@@ -23,11 +23,16 @@ class DocController extends Controller
      */
     public function index(Request $request): View
     {
-        $docs = $request->user()
-            ->docs()
-            ->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'status', 'published_at', 'updated_at'])
-            ->latest('updated_at')
-            ->paginate(10);
+        $query = Doc::query()
+            ->ownedBy($request->user()->id)
+            ->select(['id', 'title', 'slug', 'excerpt', 'cover_path', 'status', 'published_at', 'updated_at']);
+
+        $filter = $request->query('filter', 'all');
+        if (in_array($filter, ['draft', 'published'])) {
+            $query->where('status', $filter);
+        }
+
+        $docs = $query->latest('updated_at')->paginate(10)->withQueryString();
 
         return view('dashboard.docs.index', ['docs' => $docs]);
     }
@@ -71,16 +76,26 @@ class DocController extends Controller
 
     /**
      * Show the edit form.
+     * Legacy markdown content is converted to HTML for the rich text editor.
      */
     public function edit(Request $request, Doc $doc): View|RedirectResponse
     {
         $this->authorize('update', $doc);
 
-        return view('dashboard.docs.edit', ['doc' => $doc]);
+        $contentForEditor = $doc->content;
+        if (! str_contains($doc->content, '</') && ! preg_match('/^\s*</', $doc->content)) {
+            $contentForEditor = \Illuminate\Support\Str::markdown($doc->content);
+        }
+
+        return view('dashboard.docs.edit', [
+            'doc' => $doc,
+            'contentForEditor' => $contentForEditor,
+        ]);
     }
 
     /**
      * Update the doc (Form Request, slug only if not published, cover replace).
+     * When status = published, slug is never changed (SEO and URL stability).
      */
     public function update(UpdateDocRequest $request, Doc $doc): RedirectResponse
     {
@@ -93,6 +108,7 @@ class DocController extends Controller
             'status' => $request->validated('status'),
         ], fn ($v) => $v !== null);
 
+        // Slug must remain unchanged after publish; only regenerate for drafts.
         if (isset($data['title']) && $doc->status !== 'published') {
             $data['slug'] = $this->slugService->generateUnique($data['title'], $doc->id);
         }

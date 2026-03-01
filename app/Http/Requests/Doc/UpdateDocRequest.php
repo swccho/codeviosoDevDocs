@@ -26,7 +26,7 @@ class UpdateDocRequest extends FormRequest
             'content' => ['nullable', 'string', 'min:30'],
             'excerpt' => ['nullable', 'string', 'max:300'],
             'status' => ['nullable', 'in:draft,published'],
-            'cover_image' => ['nullable', 'image', 'max:2048'],
+            'cover_image' => ['nullable', 'image', 'max:20480'],
         ];
     }
 }

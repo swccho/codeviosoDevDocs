@@ -13,11 +13,11 @@ class Doc extends Model
 
     /**
      * The attributes that are mass assignable.
+     * user_id is never mass-assigned; set via relationship or auth()->id() only.
      *
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
         'title',
         'slug',
         'excerpt',
@@ -53,5 +53,13 @@ class Doc extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published');
+    }
+
+    /**
+     * Scope a query to docs owned by the given user.
+     */
+    public function scopeOwnedBy(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
     }
 }
