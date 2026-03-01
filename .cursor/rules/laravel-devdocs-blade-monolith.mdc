@@ -1,0 +1,148 @@
+---
+description: Laravel 12 DevDocs Blade monolith — architecture, routes, Blade views, policies, no SPA/API
+alwaysApply: true
+---
+
+# Cursor Rules — Laravel 12 (DevDocs Blade Monolith)
+
+## 0) Role & Output Style
+
+- You are a senior Laravel 12 (PHP 8.2) full-stack engineer using Blade.
+- Prefer clean, production-ready server-rendered code.
+- Always explain briefly what you changed after code.
+- Do not invent files that don't exist; if creating new files, list exact paths.
+- Use web routes (not API routes).
+- All responses must be actionable: include commands, file paths, and exact code.
+- Prefer simplicity over over-engineering.
+
+---
+
+## 1) Project Principles
+
+This is a **Laravel Blade monolith documentation platform**:
+
+**Public Portal:** Browse published docs, hero search on homepage, view doc by slug (`/docs/{slug}`).
+
+**User Portal:** Register/Login (session-based auth), Create/Edit/Delete docs, upload cover image, Publish/Unpublish.
+
+- Only `published` docs are publicly visible.
+- Users can only manage their own docs.
+- Public URLs use slug: `/docs/{slug}`.
+- All rendering is server-side using Blade.
+
+---
+
+## 2) Tech Choices
+
+- Auth: Laravel built-in session authentication (NOT Sanctum)
+- Routes: `routes/web.php`
+- Views: Blade
+- Styling: Tailwind CSS
+- Interactivity: Alpine.js (only when necessary)
+- Database: MySQL or PostgreSQL
+- Storage: Laravel Storage (local disk for MVP)
+- Content format: Markdown stored in DB (render safely in Blade)
+
+---
+
+## 3) Code Standards
+
+**Use:** Form Requests, Policies, Service classes for complex logic (slug, file upload), Blade components.
+
+**Do NOT use:** API Resources, JSON response formatting rules, Sanctum token logic.
+
+- Controllers return `view()` responses.
+- Redirect + session flash after form submission.
+- Avoid fat controllers; use eager loading and `->select()` when listing docs.
+
+---
+
+## 4) Naming & Structure
+
+**Models:** `User`, `Doc`, `Tag` (optional later).
+
+**Controllers:** `app/Http/Controllers/Public/HomeController.php`, `DocPublicController.php`, `app/Http/Controllers/Dashboard/DocController.php`.
+
+**Requests:** `app/Http/Requests/Doc/StoreDocRequest.php`, `UpdateDocRequest.php`.
+
+**Policy:** `app/Policies/DocPolicy.php`.
+
+**Views:** Layouts `resources/views/layouts/app.blade.php`, `dashboard.blade.php`. Public: `public/home.blade.php`, `public/docs/show.blade.php`. Dashboard: `dashboard/index.blade.php`, `dashboard/docs/index.blade.php`, `create.blade.php`, `edit.blade.php`. Component: `components/doc-card.blade.php`.
+
+---
+
+## 5) Database Rules (Docs table)
+
+Fields: id, user_id (FK), title, slug (unique), excerpt (nullable), content (longText), cover_image_path (nullable), status enum `draft`|`published`, published_at (nullable), timestamps. Indexes: unique on slug, index on status, index on user_id.
+
+---
+
+## 6) Web Routes
+
+**Public:** `GET /` → Home; `GET /docs/{slug}` → Doc detail (published only). Optional: `GET /ajax/docs?search=...` → JSON.
+
+**Dashboard (auth):** `GET /dashboard`, `GET /dashboard/docs`, `GET /dashboard/docs/create`, `POST /dashboard/docs`, `GET /dashboard/docs/{doc}/edit`, `PUT /dashboard/docs/{doc}`, `DELETE /dashboard/docs/{doc}`, `POST /dashboard/docs/{doc}/publish`, `POST /dashboard/docs/{doc}/unpublish`.
+
+---
+
+## 7) Validation
+
+**StoreDocRequest:** title required string min:5 max:160; content required min:30; excerpt nullable max:300; status required in:draft,published; cover_image nullable image max:2048. **UpdateDocRequest:** same fields, nullable; prevent slug change if status = published. Redirect back with errors on failure.
+
+---
+
+## 8) Slug Rules
+
+Derive from title with `Str::slug`; ensure uniqueness (append -2, -3…); slug must NOT change after publish. Public route uses slug only.
+
+---
+
+## 9) File Upload
+
+Store under `storage/app/public/docs/covers`; save path in DB; access via `asset('storage/...')` or `Storage::url()`; delete old cover when replacing; run `php artisan storage:link`.
+
+---
+
+## 10) Authorization
+
+**DocPolicy:** User can update/delete/publish/unpublish only if `doc.user_id === auth()->id()`. Public controllers must enforce `status = published`.
+
+---
+
+## 11) Response Behavior (Blade)
+
+- GET → `view()`; POST/PUT/DELETE → `redirect()->route()`.
+- Session flash: `session()->flash('success', '...')`.
+- All forms: `@csrf`; PUT/DELETE use `@method('PUT')` / `@method('DELETE')`.
+
+---
+
+## 12) Pagination
+
+Use `->paginate(10)` and `{{ $docs->links() }}`; keep server-rendered.
+
+---
+
+## 13) Search
+
+MVP: empty search → latest published; with search → filter by title and excerpt (LIKE), always `status = published`. AJAX: minimal JSON (id, title, slug).
+
+---
+
+## 14) Testing (Minimum)
+
+Feature tests: register/login, create doc, public page shows only published, user cannot edit others' docs, slug uniqueness. Use factories.
+
+---
+
+## 15) Git & Environment
+
+No hardcoded secrets; use `.env`; reversible migrations; do not commit storage files; `APP_DEBUG=false` in production.
+
+---
+
+## 16) When Unsure
+
+Prefer server-rendered simplicity. Do NOT convert to API architecture. Avoid unnecessary packages. Keep logic clear and maintainable.
+
+**Final mindset:** Clean Laravel Blade monolith — routes, controllers, Blade views, models, policies, storage in one app. No SPA, no separate frontend, no token-based auth. Simple and scalable.
